@@ -9,8 +9,14 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.List;
 
+/** Minimal CSV import/export using only java.nio + java.io. */
 public final class CsvIO {
-
+    
+     /**
+     * Load patients from a CSV file into a PatientRegistry.
+     * Expected header: id,name,age,severity
+     * Skips blank lines and trims fields.
+     */
     public static void loadPatients(Path csv, PatientRegistry reg) throws IOException {
         try (BufferedReader reader = Files.newBufferedReader(csv, StandardCharsets.UTF_8)) {
             String header = reader.readLine();
@@ -56,6 +62,11 @@ public final class CsvIO {
         }
     }
 
+     /**
+     * Export a list of treated cases to a CSV file.
+     * Writes header: id,name,age,severity,treatedAt
+     * treatedAt is ISO-8601 Instant timestamp.
+     */
     public static void exportLog(Path csv, List<TreatedCase> cases) throws IOException {
         try (BufferedWriter writer = Files.newBufferedWriter(csv, StandardCharsets.UTF_8)) {
             writer.write("id,name,age,severity,treatedAt");
@@ -76,7 +87,10 @@ public final class CsvIO {
             }
         }
     }
-
+    
+     /**
+     * Minimal CSV escaping (wrap in quotes if contains comma or quote).
+     */
     private static String escape(String s) {
         if (s.contains(",") || s.contains("\"")) {
             return "\"" + s.replace("\"", "\"\"") + "\"";
