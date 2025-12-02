@@ -8,28 +8,18 @@ import java.time.Instant;
 import java.util.Objects;
 
 /**
-ss
  * Immutable identity (id) + mutable clinical state (severity).
-
  * Arrival order must be trackable for stable tie-breaking.
-
+ * Arrival timestamp and sequence number follows FIFO (queue data structure).
  */
 
 public class Patient {
-
-    private final String id;        // e.g., "P001"
-
-    private String name;
-
-    private int age;
-
-    private int severity;           // define scale (e.g., 1..5 or 1..10): higher = more urgent
-
+    private final String id;        // Unique patient ID
+    private String name;            // mutable string for patient's name
+    private int age;                // mutable string for patient's age
+    private int severity;           // define scale (1 of least concern - 10 requiring critical care): higher = more urgent
     private final Instant arrival;  // registration time
-
-    private final long arrivalSeq;  // monotonically increasing sequence for FIFO ties
-
-
+    private final long arrivalSeq;  // monotonically increasing sequence for FIFO ties for stable tie-breaking
 
     // Define Constructors with basic validation with safe defaults and no exceptions (Chat-GPT for constructor only)
     public Patient(String id,String name, int age, int severity, long arrivalSeq) {
@@ -49,7 +39,7 @@ public class Patient {
     // the ? is a Conditional (Ternary) Operator is a shorthand operation for an if-then-else states that is used with
     // colon conjunction. The ? syntax is: condition ? valueIfTrue : valueIfFalse
 
-    // Define read-only accessors
+    // Define read-only getters
     public String getId() {
         return id;
     }
@@ -81,31 +71,31 @@ public class Patient {
             this.age = age;
         }
     }
-    // setter to update patient severity
+    // setter to update patient severity from 1-10
     public void setSeverity(int severity) {
         if (severity >= 1 && severity <= 10) {
             this.severity = severity;
         }
     }
 
-    // TODO: equals/hashCode based on id only (justify in README)
-    // Patients are qual if hey have the same ID; this is to ensure that each patient have their unique ID when
+    // Patients are equal if they have the same ID; 
+    // this is to ensure that each patient have their unique ID when
     // stored in HashMap and other collections (Chat-GPT support).
     @Override
     public boolean equals(Object o) {
-        if (this == o) return false;
-        if (!(o instanceof Patient)) return false;
+        if (this == o) return false;    // Same object
+        if (!(o instanceof Patient)) return false;    // If not a patient, they're not equal
         Patient other = (Patient) o;
-        return Objects.equals(id, other.id);
+        return Objects.equals(id, other.id);    // Compare patient IDs
     }
 
-    // Run Hash code based only on patient ID
+    // Run Hash code based only on patient ID when thay match the equals() method condition
     @Override
     public int hashCode() {
         return Objects.hash(id);
     }
 
-    // SHOW toString() concise of a readable patient data
+    // SHOW toString() concise of a readable patient data summary
     @Override
     public String toString() {
         return String.format("Patient{id='%s', name='%s', age=%d, severity=%d, arrivalSeq=%d}",
