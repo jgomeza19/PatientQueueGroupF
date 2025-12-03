@@ -3,8 +3,8 @@ package edu.hcu.triage;
 import java.util.Random;
 
 /**
- * Deterministic workload generator for performance and stress testing.
- * This class is used to automatically create realistic patient traffic patterns
+ * Deterministic workload generator for performance testing.
+ * This class is used to automatically create realistic patient queue
  * so that the TriageQueue and PatientRegistry can be tested under load.
  * The workload is deterministic due to the fixed RNG seed, enabling repeatable
  * performance comparisons between implementations.
@@ -12,7 +12,7 @@ import java.util.Random;
 public final class SampleWorkloads {
 
     /** 
-     * Choice of statistical distribution for severity values.
+     * Choice of statistical distribution for severity values. (Chat-GPT suggestion)
      * UNIFORM → every severity 1–10 equally likely.
      * SKEWED → intentionally biased so low severities appear more often,
      *           simulating real-world triage where minor cases dominate.
