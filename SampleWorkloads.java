@@ -11,7 +11,7 @@ import java.util.Random;
  */
 public final class SampleWorkloads {
 
-    /** 
+    /**
      * Choice of statistical distribution for severity values. (Chat-GPT suggestion)
      * UNIFORM → every severity 1–10 equally likely.
      * SKEWED → intentionally biased so low severities appear more often,
@@ -82,7 +82,7 @@ public final class SampleWorkloads {
     /**
      * Bulk-enqueue: creates 'count' brand-new synthetic patients and
      * inserts them into both the registry and the triage queue.
-     * 
+     *
      * Uses the registry first so arrivalSeq numbers remain strictly increasing.
      */
     public void enqueueRandomPatients(int count, PatientRegistry reg, TriageQueue queue) {
@@ -102,8 +102,7 @@ public final class SampleWorkloads {
 
     /**
      * Safely performs 'count' dequeue operations.
-     * 
-     * If the queue is empty, dequeueNext() returns null — ignored intentionally,
+     * If the queue is empty, dequeueNext() returns null is ignored,
      * since this method is meant to simulate general traffic patterns where
      * dequeue attempts may occur even when no patients are waiting.
      */
@@ -115,7 +114,7 @@ public final class SampleWorkloads {
 
     /**
      * Mixed workload generator.
-     * 
+     *
      * For totalOps operations, randomly chooses between enqueue and dequeue
      * based on the provided ratio.
      */
