@@ -1,104 +1,216 @@
-// Declare project for organizing related project files
 package edu.hcu.triage;
 
-// Import for timestamp recording
-import java.time.Instant;
-
-// Import for equals() and hashcode() objects
-import java.util.Objects;
+import java.time.Instant;     // Instant is used to record an exact timestamp, precise to nanoseconds
+import java.util.Objects;     // Used to correctly implement equals() and hashCode()
 
 /**
- * Immutable identity (id) + mutable clinical state (severity).
- * Arrival order must be trackable for stable tie-breaking.
- * Arrival timestamp and sequence number follows FIFO (queue data structure).
+ * Patient represents ONE individual who is registered in the hospital system.
+ *
+ * This class mixes:
+ *    - Immutable identity data (ID, arrivalSeq, arrival timestamp)
+ *    - Mutable clinical data (name, age, severity)
+ *
+ * IMPORTANT DESIGN POINT:
+ *    - ID uniquely identifies a patient permanently.
+ *    - arrivalSeq is used for tie-breaking in priority queue.
+ *    - severity is mutable so it can be updated after registration.
  */
-
 public class Patient {
-    private final String id;        // Unique patient ID
-    private String name;            // mutable string for patient's name
-    private int age;                // mutable string for patient's age
-    private int severity;           // define scale (1 of least concern - 10 requiring critical care): higher = more urgent
-    private final Instant arrival;  // registration time
-    private final long arrivalSeq;  // monotonically increasing sequence for FIFO ties for stable tie-breaking
 
-    // Define Constructors with basic validation with safe defaults and no exceptions (Chat-GPT for constructor only)
-    public Patient(String id,String name, int age, int severity, long arrivalSeq) {
-        // Assign unique ID or default to "No Id" if patient has no ID
+    /** 
+     * The **unique identifier** for the patient.
+     *
+     * This MUST be unique across the entire registry.
+     * It is a final field because identity never changes.
+     */
+    private final String id;
+
+    /**
+     * The patient's current name.
+     * This is mutable because names can be updated.
+     */
+    private String name;
+
+    /**
+     * The patient's age.
+     * Mutable so hospital staff can correct mistakes (e.g., typo).
+     */
+    private int age;
+
+    /**
+     * The patient's severity score, representing how urgent their case is.
+     * Higher severity → higher priority in triage queue.
+     * Mutable because a patient's condition can change.
+     */
+    private int severity;
+
+    /**
+     * Timestamp marking EXACTLY when the patient object was created.
+     * This is final because arrival time never changes.
+     */
+    private final Instant arrival;
+
+    /**
+     * A monotonically increasing sequence number assigned on registration.
+     *
+     * Purpose:
+     *    - Used for FIFO ordering when severity ties occur.
+     *    - If two patients have same severity, lower arrivalSeq = higher priority.
+     *
+     * This is final because once a patient registers, their order never changes.
+     */
+    private final long arrivalSeq;
+
+    /**
+     * Patient constructor.
+     *
+     * This constructor applies **basic validation** while not throwing errors,
+     * because your early design intention was "safe defaults instead of exceptions."
+     *
+     * @param id          Unique patient ID, required (falls back to "No Id" if invalid)
+     * @param name        Patient name (defaults to "No Name" if blank)
+     * @param age         Patient age (minimum allowed = 0)
+     * @param severity    Severity score (must be 1–10; defaults to 1)
+     * @param arrivalSeq  The sequence number assigned by PatientRegistry
+     */
+    public Patient(String id, String name, int age, int severity, long arrivalSeq) {
+
+        // Validate ID: if null or blank, assign placeholder
+        // Using ternary for compact conditional assignment
         this.id = (id != null && !id.isBlank()) ? id : "No Id";
-        // Assign name or default to "No name" if patient name is empty
+
+        // Validate name: fallback if empty or null
         this.name = (name != null && !name.isBlank()) ? name : "No Name";
-        // Set age default to 0
+
+        // Age must be >= 0; otherwise default to 0
         this.age = (age >= 0) ? age : 0;
-        // Severity is set to 1 by default and ensures it's between 1 and 10
+
+        // Severity must be between 1 and 10; otherwise fallback to 1
         this.severity = (severity >= 1 && severity <= 10) ? severity : 1;
-        // Create time for patient object
+
+        // Capture the precise time this patient was created
         this.arrival = Instant.now();
-        // Set the sequence number for ordering patients in triage queue
+
+        // Store the arrival sequence provided by PatientRegistry
         this.arrivalSeq = arrivalSeq;
     }
-    // the ? is a Conditional (Ternary) Operator is a shorthand operation for an if-then-else states that is used with
-    // colon conjunction. The ? syntax is: condition ? valueIfTrue : valueIfFalse
 
-    // Define read-only getters
-    public String getId() {
-        return id;
-    }
-    public String getName() {
-        return name;
-    }
-    public int getAge() {
-        return age;
-    }
-    public int getSeverity() {
-        return severity;
-    }
-    public Instant getArrival() {
-        return arrival;
-    }
-    public long getArrivalSeq() {
-        return arrivalSeq;
-    }
+    /* =====================================================================
+     *                             GETTERS
+     * ===================================================================== */
 
-    // Setter to update names if it is not null and not blank
+    /** Returns the unique patient ID. */
+    public String getId() { return id; }
+
+    /** Returns the patient's current name. */
+    public String getName() { return name; }
+
+    /** Returns the patient's age. */
+    public int getAge() { return age; }
+
+    /** Returns the severity score (1–10). */
+    public int getSeverity() { return severity; }
+
+    /** Returns the timestamp when the patient was registered. */
+    public Instant getArrival() { return arrival; }
+
+    /** Returns the FIFO sequence number assigned at registration time. */
+    public long getArrivalSeq() { return arrivalSeq; }
+
+    /* =====================================================================
+     *                             SETTERS
+     * ===================================================================== */
+
+    /**
+     * Updates the patient's name ONLY if the new value is non-null and non-empty.
+     * This prevents overwriting good data with blank strings.
+     */
     public void setName(String name) {
         if (name != null && !name.isBlank()) {
             this.name = name;
         }
     }
-    // Setter to change patient's age if it's greater than or equal to 0
+
+    /**
+     * Update patient age only if it is valid (>= 0).
+     * Negative ages are ignored.
+     */
     public void setAge(int age) {
         if (age >= 0) {
             this.age = age;
         }
     }
-    // setter to update patient severity from 1-10
+
+    /**
+     * Update severity ONLY if the value is within 1–10.
+     * Out-of-range values are ignored.
+     */
     public void setSeverity(int severity) {
         if (severity >= 1 && severity <= 10) {
             this.severity = severity;
         }
     }
 
-    // Patients are equal if they have the same ID; 
-    // this is to ensure that each patient have their unique ID when
-    // stored in HashMap and other collections (Chat-GPT support).
+    /* =====================================================================
+     *                       equals() AND hashCode()
+     * ===================================================================== */
+
+    /**
+     * equals(Object) determines whether two Patient objects refer to the SAME PERSON.
+     *
+     * In this project:
+     *    - Two patients are considered equal if they have the same ID.
+     *    - ID is final and unique.
+     *
+     * WARNING: You originally had a bug where the line incorrectly returned false
+     * when `this == o` — which would make objects not equal to themselves.
+     *
+     * This has now been corrected and the original bug line commented out.
+     */
     @Override
     public boolean equals(Object o) {
-        if (this == o) return false;    // Same object
-        if (!(o instanceof Patient)) return false;    // If not a patient, they're not equal
+
+        // if (this == o) return false;   // ❌ WRONG — identical objects should return true
+        if (this == o) return true;        // ✔ FIXED
+
+        if (!(o instanceof Patient)) return false;
+
         Patient other = (Patient) o;
-        return Objects.equals(id, other.id);    // Compare patient IDs
+
+        // If IDs match, patients are considered equal
+        return Objects.equals(id, other.id);
     }
 
-    // Run Hash code based only on patient ID when thay match the equals() method condition
+    /**
+     * hashCode() MUST match equals().
+     * Since equals is based ONLY on ID, hashCode must also use ONLY ID.
+     */
     @Override
     public int hashCode() {
         return Objects.hash(id);
     }
 
-    // SHOW toString() concise of a readable patient data summary
+    /* =====================================================================
+     *                             toString()
+     * ===================================================================== */
+
+    /**
+     * Creates a clean, readable string representation of the Patient.
+     *
+     * Includes:
+     *    - ID
+     *    - name
+     *    - age
+     *    - severity
+     *    - arrivalSeq
+     *
+     * The timestamp is intentionally omitted for cleaner output.
+     */
     @Override
     public String toString() {
-        return String.format("Patient{id='%s', name='%s', age=%d, severity=%d, arrivalSeq=%d}",
-                id, name, age, severity, arrivalSeq);
+        return String.format(
+                "Patient{id='%s', name='%s', age=%d, severity=%d, arrivalSeq=%d}",
+                id, name, age, severity, arrivalSeq
+        );
     }
 }
