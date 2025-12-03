@@ -6,22 +6,23 @@ import java.util.*;
 
 /**
  * Uses:
- *   - PatientRegistry   (store all patients)
- *   - TriageQueue       (priority queue for severity-based ordering)
- *   - TreatmentLog      (record of treated patients)
+ *   - PatientRegistry to store all patients
+ *   - TriageQueue for priority queue for severity-based ordering and arrivalSeq
+ *   - TreatmentLog to record state/condition of treated patients
  */
 public class HospitalApp {
 
     private final PatientRegistry registry = new PatientRegistry();
     private final TriageQueue triage = new TriageQueue();
     private final TreatmentLog log = new TreatmentLog();
-    private final Scanner in = new Scanner(System.in);
+    private final Scanner in = new Scanner(System.in);    // Use scanner in order to enter patient's condition
 
+    // Main method to run Hospital App
     public static void main(String[] args) {
         new HospitalApp().run();
     }
 
-    /** Main control loop */
+    /** Main control loop to drive console application with user options*/
     private void run() {
         // Simple console menu loop
         while (true) {
@@ -53,6 +54,8 @@ public class HospitalApp {
     }
 
     /** (1) Register a new patient */
+    // Try-catch is used for exception handling whenever the console operates on one
+    // of the user choices
     private void registerPatient() {
         System.out.println("---- Register New Patient ----");
 
@@ -61,6 +64,7 @@ public class HospitalApp {
         int age = promptInt("Age: ");
         int severity = promptInt("Severity (1–10): ");
 
+        // try-block exception to handle errors and any potential errors that can print a message
         try {
             Patient p = registry.registerNew(id, name, age, severity);
             System.out.println("Registered: " + p);
@@ -94,7 +98,7 @@ public class HospitalApp {
         else System.out.println("No such ID.");
     }
 
-    /** (4) Peek at next patient (non-destructive) */
+    /** (4) Peek at next patient */
     private void peekNext() {
         Optional<Patient> p = triage.peekNext();
         if (p.isPresent()) System.out.println("Next: " + p.get());
@@ -190,10 +194,7 @@ public class HospitalApp {
         }
     }
 
-    /* ==========================================
-     *               Menu Printing
-     * ========================================== */
-
+    // Menu printing
     private void printMenu() {
         System.out.println();
         System.out.println("========= Hospital Menu =========");
@@ -211,10 +212,7 @@ public class HospitalApp {
         System.out.println("=================================");
     }
 
-    /* ==========================================
-     *           Input Helper Methods
-     * ========================================== */
-
+    // Input helper method (Chat-GPT support)
     private String prompt(String msg) {
         System.out.print(msg);
         return in.nextLine().trim();
@@ -249,7 +247,7 @@ public class HospitalApp {
         }
     }
 
-    /** Choose STABLE / OBSERVE / TRANSFER */
+    // Choose STABLE / OBSERVE / TRANSFER according to TreatedCase java code
     private TreatedCase.Outcome askOutcome() {
         while (true) {
             System.out.println("Outcome: 1) STABLE  2) OBSERVE  3) TRANSFER");
