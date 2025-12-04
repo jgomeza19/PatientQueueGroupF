@@ -327,24 +327,6 @@ public class HospitalApp {
         }
     }
 
-    /**
-     * OPTION 11 — load patients from CSV file.
-     *
-     * Uses CsvIO.loadPatients(...)
-     */
-    private void importFromCsv() {
-
-        String path = prompt("CSV file name: ");
-        Path file = Path.of(path);
-
-        try {
-            CsvIO.loadPatients(file, registry);
-            System.out.println("Loaded patients from " + file);
-        } catch (Exception e) {
-            System.out.println("Import failed: " + e.getMessage());
-        }
-    }
-
     /* =====================================================
      *               INPUT UTILITY METHODS
      * ===================================================== */
@@ -441,7 +423,6 @@ public class HospitalApp {
         System.out.println("8) Show treatment log");
         System.out.println("9) Performance demo");
         System.out.println("10) Export log to CSV");
-        System.out.println("11) Import patients from CSV");
         System.out.println("0) Exit");
         System.out.println("=================================");
     }
